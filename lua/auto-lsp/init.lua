@@ -10,12 +10,13 @@ M.checked_filetypes = {}
 -- false: server unavailable
 M.checked_servers = {}
 
--- FEAT: implement setup_{generics, filetype}()
--- | 1. Get the list of servers
--- | 2. Check if the server has already been checked
--- | 3. Check if the server's executable is available on the $PATH
--- | 4. Setup available servers via lspconfig
--- | 5. Retrigger events to make the servers attach to existing buffers
+local function doautocmd(event, opts)
+  local buffers = vim.api.nvim_list_bufs()
+  for _, bufnr in ipairs(buffers) do
+    opts.buffer = bufnr
+    vim.api.nvim_exec_autocmds(event, opts)
+  end
+end
 
 function M.setup_server(name, opts)
   -- NOTE: should this check happen inside or outside this function?
@@ -38,16 +39,42 @@ end
 
 function M.setup_generics()
   local servers = reg.generic_servers
+  for _, name in ipairs(servers) do
+    M.setup_server(name, nil)
+  end
+
+  doautocmd("BufReadPost", {
+    group = vim.api.nvim_create_augroup("lspconfig", { clear = false }),
+    modeline = false,
+  })
 end
 
 function M.setup_filetype(ft)
+  if M.checked_filetypes[ft] then
+    return
+  end
+  M.checked_filetypes[ft] = true
+
   local servers = reg.filetype_servers[ft]
+  if not servers then
+    return
+  end
+
+  for _, name in ipairs(servers) do
+    M.setup_server(name, nil)
+  end
+
+  doautocmd("FileType", {
+    group = vim.api.nvim_create_augroup("lspconfig", { clear = false }),
+    modeline = false,
+  })
 end
 
 function M.setup(_)
   -- FEAT: create autocmds in setup()
   -- | 1. setup_filetype() upon FileType
   -- | 2. setup_generics() upon VimEnter
+  -- FEAT: apply user configs, global and server-specific
 end
 
 return M
