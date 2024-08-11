@@ -4,11 +4,10 @@ local vim = vim
 local reg = require("auto-lsp.registry")
 
 M.checked_filetypes = {}
-
--- nil: unchecked
--- true: successfully loaded
--- false: server unavailable
 M.checked_servers = {}
+
+local augroup = vim.api.nvim_create_augroup
+local autocmd = vim.api.nvim_create_autocmd
 
 local function doautocmd(event, opts)
   local buffers = vim.api.nvim_list_bufs()
@@ -44,7 +43,7 @@ function M.setup_generics()
   end
 
   doautocmd("BufReadPost", {
-    group = vim.api.nvim_create_augroup("lspconfig", { clear = false }),
+    group = augroup("lspconfig", { clear = false }),
     modeline = false,
   })
 end
@@ -65,27 +64,28 @@ function M.setup_filetype(ft)
   end
 
   doautocmd("FileType", {
-    group = vim.api.nvim_create_augroup("lspconfig", { clear = false }),
+    group = augroup("lspconfig", { clear = false }),
     modeline = false,
   })
 end
 
 -- FEAT: apply user configs, global and server-specific
 function M.setup(_)
+  local group = augroup("auto-lsp", { clear = true })
+
   vim.schedule(M.setup_generics)
-  vim.api.nvim_create_autocmd("FileType", {
+  autocmd("FileType", {
+    group = group,
     callback = function(args)
-      local ft = args.match
-      M.setup_filetype(ft)
+      M.setup_filetype(args.match)
     end,
-    group = vim.api.nvim_create_augroup("auto-lsp", { clear = true }),
   })
 
   -- If auto-lsp.nvim is loaded after the startup (lazy loading),
-  -- check the existing buffers by retriggering the FileType event.
+  -- retrigger the FileType event to check the existing buffers
   if vim.v.vim_did_enter == 1 then
     doautocmd("FileType", {
-      group = "auto-lsp",
+      group = group,
       modeline = false,
     })
   end
