@@ -70,11 +70,25 @@ function M.setup_filetype(ft)
   })
 end
 
+-- FEAT: apply user configs, global and server-specific
 function M.setup(_)
-  -- FEAT: create autocmds in setup()
-  -- | 1. setup_filetype() upon FileType
-  -- | 2. setup_generics() upon VimEnter
-  -- FEAT: apply user configs, global and server-specific
+  vim.schedule(M.setup_generics)
+  vim.api.nvim_create_autocmd("FileType", {
+    callback = function(args)
+      local ft = args.match
+      M.setup_filetype(ft)
+    end,
+    group = vim.api.nvim_create_augroup("auto-lsp", { clear = true }),
+  })
+
+  -- If auto-lsp.nvim is loaded after the startup (lazy loading),
+  -- check the existing buffers by retriggering the FileType event.
+  if vim.v.vim_did_enter == 1 then
+    doautocmd("FileType", {
+      group = "auto-lsp",
+      modeline = false,
+    })
+  end
 end
 
 return M
