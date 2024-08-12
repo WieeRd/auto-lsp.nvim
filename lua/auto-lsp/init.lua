@@ -20,8 +20,12 @@ local function doautocmd(event, opts)
   end
 end
 
-function M.setup_server(name)
-  if M.checked_servers[name] ~= nil then
+function M.setup_server(name, recheck)
+  -- nil: unchecked
+  -- true: checked, already setup
+  -- false: checked, was unavailable
+  local checked = M.checked_servers[name]
+  if checked == true or (checked == false and not recheck) then
     return
   end
 
@@ -42,16 +46,15 @@ function M.setup_server(name)
   if setup then
     opts = vim.tbl_deep_extend("force", M.global_opts, opts or {})
     require("lspconfig")[name].setup(opts)
-    M.checked_servers[name] = true
-  else
-    M.checked_servers[name] = false
   end
+
+  M.checked_servers[name] = setup
 end
 
-function M.setup_generics()
+function M.setup_generics(recheck)
   local servers = reg.generic_servers
   for _, name in ipairs(servers) do
-    M.setup_server(name)
+    M.setup_server(name, recheck)
   end
 
   doautocmd("BufReadPost", {
@@ -60,8 +63,8 @@ function M.setup_generics()
   })
 end
 
-function M.setup_filetype(ft)
-  if M.checked_filetypes[ft] then
+function M.setup_filetype(ft, recheck)
+  if M.checked_filetypes[ft] == true and not recheck then
     return
   end
   M.checked_filetypes[ft] = true
@@ -121,6 +124,10 @@ function M.setup(opts)
       modeline = false,
     })
   end
+end
+
+function M.refresh()
+  -- FEAT: LATER: recheck servers to detect newly installed ones
 end
 
 return M
