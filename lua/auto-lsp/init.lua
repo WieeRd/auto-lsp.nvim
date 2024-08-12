@@ -6,6 +6,9 @@ local reg = require("auto-lsp.registry")
 M.checked_filetypes = {}
 M.checked_servers = {}
 
+M.global_opts = {}
+M.server_opts = {}
+
 local augroup = vim.api.nvim_create_augroup
 local autocmd = vim.api.nvim_create_autocmd
 
@@ -17,19 +20,34 @@ local function doautocmd(event, opts)
   end
 end
 
-function M.setup_server(name, opts)
-  -- NOTE: should this check happen inside or outside this function?
+---@param exec string | boolean
+---@param opts table | false | nil
+---@return boolean
+local function should_setup(exec, opts)
+  if type(opts) == "table" then
+    return true
+  elseif opts == false then
+    return false
+  elseif exec == false then
+    return false
+  elseif exec == true then
+    return true
+  elseif type(exec) == "string" then
+    return vim.fn.executable(exec) == 1
+  end
+end
+
+function M.setup_server(name)
   if M.checked_servers[name] ~= nil then
     return
   end
 
   local exec = reg.server_executable[name]
-  if
-    exec == true
-    or (exec == false and opts)
-    or vim.fn.executable(exec) == 1
-  then
-    require("lspconfig")[name].setup(opts or {})
+  local opts = M.server_opts[name]
+
+  if should_setup(exec, opts) then
+    opts = vim.tbl_deep_extend("force", M.global_opts, opts or {})
+    require("lspconfig")[name].setup(opts)
     M.checked_servers[name] = true
   else
     M.checked_servers[name] = false
@@ -39,7 +57,7 @@ end
 function M.setup_generics()
   local servers = reg.generic_servers
   for _, name in ipairs(servers) do
-    M.setup_server(name, nil)
+    M.setup_server(name)
   end
 
   doautocmd("BufReadPost", {
@@ -60,7 +78,7 @@ function M.setup_filetype(ft)
   end
 
   for _, name in ipairs(servers) do
-    M.setup_server(name, nil)
+    M.setup_server(name)
   end
 
   doautocmd("FileType", {
@@ -69,11 +87,13 @@ function M.setup_filetype(ft)
   })
 end
 
--- FEAT: apply user configs, global and server-specific
-function M.setup(_)
-  local group = augroup("auto-lsp", { clear = true })
+function M.setup(opts)
+  M.global_opts = opts.global_opts or {}
+  M.server_opts = opts.server_opts or {}
 
   vim.schedule(M.setup_generics)
+
+  local group = augroup("auto-lsp", { clear = true })
   autocmd("FileType", {
     group = group,
     callback = function(args)
