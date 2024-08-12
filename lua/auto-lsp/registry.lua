@@ -4,7 +4,7 @@ return {
   },
   filetype_servers = {
     ["elixir"] = { "elixirls" },
-    ["gd"] = { "gdscript" },
+    ["gdscript"] = { "gdscript" },
     ["python"] = { "pyright" },
     ["rust"] = { "rust_analyzer" },
   },

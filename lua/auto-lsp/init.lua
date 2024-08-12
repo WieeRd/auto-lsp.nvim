@@ -20,32 +20,26 @@ local function doautocmd(event, opts)
   end
 end
 
----@param exec string | boolean
----@param opts table | false | nil
----@return boolean
-local function should_setup(exec, opts)
-  if type(opts) == "table" then
-    return true
-  elseif opts == false then
-    return false
-  elseif exec == false then
-    return false
-  elseif exec == true then
-    return true
-  elseif type(exec) == "string" then
-    return vim.fn.executable(exec) == 1
-  end
-end
-
 function M.setup_server(name)
   if M.checked_servers[name] ~= nil then
     return
   end
 
-  local exec = reg.server_executable[name]
   local opts = M.server_opts[name]
+  local exec = reg.server_executable[name]
 
-  if should_setup(exec, opts) then
+  local setup
+  if opts == false then
+    setup = false
+  elseif type(opts) == "table" then
+    setup = true
+  elseif type(exec) == "boolean" then
+    setup = exec
+  elseif type(exec) == "string" then
+    setup = vim.fn.executable(exec) == 1
+  end
+
+  if setup then
     opts = vim.tbl_deep_extend("force", M.global_opts, opts or {})
     require("lspconfig")[name].setup(opts)
     M.checked_servers[name] = true
