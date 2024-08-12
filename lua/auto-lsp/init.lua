@@ -85,6 +85,24 @@ function M.setup(opts)
   M.global_opts = opts.global_opts or {}
   M.server_opts = opts.server_opts or {}
 
+  -- If the user specified the `filetypes` list through `server_opts`,
+  -- update `filetype_servers` to trigger setup on the additional filetypes
+  for name, opts in pairs(M.server_opts) do
+    if not (opts and opts.filetypes) then
+      goto continue
+    end
+
+    for _, ft in ipairs(opts.filetypes) do
+      local servers = reg.filetype_servers[ft] or {}
+      if not vim.list_contains(servers, name) then
+        servers[#servers + 1] = name
+      end
+      reg.filetype_servers[ft] = servers
+    end
+
+    ::continue::
+  end
+
   vim.schedule(M.setup_generics)
 
   local group = augroup("auto-lsp", { clear = true })
