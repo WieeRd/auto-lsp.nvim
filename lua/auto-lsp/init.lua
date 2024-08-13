@@ -12,7 +12,8 @@ M.server_opts = {}
 local augroup = vim.api.nvim_create_augroup
 local autocmd = vim.api.nvim_create_autocmd
 
-local function doautocmd(event, opts)
+-- FIX: ASAP: should have used `pattern` instead of `buffer`
+local function doautoall(event, opts)
   local buffers = vim.api.nvim_list_bufs()
   for _, bufnr in ipairs(buffers) do
     opts.buffer = bufnr
@@ -57,7 +58,7 @@ function M.setup_generics(recheck)
     M.setup_server(name, recheck)
   end
 
-  doautocmd("BufReadPost", {
+  doautoall("BufReadPost", {
     group = augroup("lspconfig", { clear = false }),
     modeline = false,
   })
@@ -78,7 +79,7 @@ function M.setup_filetype(ft, recheck)
     M.setup_server(name)
   end
 
-  doautocmd("FileType", {
+  doautoall("FileType", {
     group = augroup("lspconfig", { clear = false }),
     modeline = false,
   })
@@ -106,7 +107,7 @@ function M.setup(opts)
     ::continue::
   end
 
-  vim.schedule(M.setup_generics)
+  M.setup_generics()
 
   local group = augroup("auto-lsp", { clear = true })
   autocmd("FileType", {
@@ -119,15 +120,27 @@ function M.setup(opts)
   -- If auto-lsp.nvim is loaded after the startup (lazy loading),
   -- retrigger the FileType event to check the existing buffers
   if vim.v.vim_did_enter == 1 then
-    doautocmd("FileType", {
+    doautoall("FileType", {
       group = group,
       modeline = false,
     })
   end
 end
 
+-- FEAT: auto refresh on new installation
+-- | Option #1 - Watch each directory in $PATH (`:h uv_fs_event_t`)
+-- | Option #2 - Autocmd on FocusGained, TermLeave, CmdlineLeave, etc
 function M.refresh()
-  -- FEAT: LATER: recheck servers to detect newly installed ones
+  for name, setup in pairs(M.checked_servers) do
+    if not setup then
+      M.setup_server(name, true)
+    end
+  end
+
+  doautoall({ "FileType", "BufReadPost" }, {
+    group = augroup("lspconfig", { clear = false }),
+    modeline = false,
+  })
 end
 
 return M
