@@ -11,13 +11,13 @@ M.server_opts = {}
 
 local augroup = vim.api.nvim_create_augroup
 local autocmd = vim.api.nvim_create_autocmd
+local doautocmd = vim.api.nvim_exec_autocmds
 
--- FIX: ASAP: should have used `pattern` instead of `buffer`
 local function doautoall(event, opts)
   local buffers = vim.api.nvim_list_bufs()
   for _, bufnr in ipairs(buffers) do
     opts.buffer = bufnr
-    vim.api.nvim_exec_autocmds(event, opts)
+    doautocmd(event, opts)
   end
 end
 
@@ -79,10 +79,15 @@ function M.setup_filetype(ft, recheck)
     M.setup_server(name)
   end
 
-  doautoall("FileType", {
-    group = augroup("lspconfig", { clear = false }),
-    modeline = false,
-  })
+  local buffers = vim.api.nvim_list_bufs()
+  for _, bufnr in ipairs(buffers) do
+    if vim.bo[bufnr].filetype == ft then
+      doautocmd("FileType", {
+        group = augroup("lspconfig", { clear = false }),
+        modeline = false,
+      })
+    end
+  end
 end
 
 function M.setup(opts)
@@ -108,22 +113,20 @@ function M.setup(opts)
   end
 
   M.setup_generics()
-
-  local group = augroup("auto-lsp", { clear = true })
   autocmd("FileType", {
-    group = group,
+    group = augroup("auto-lsp", { clear = true }),
     callback = function(args)
       M.setup_filetype(args.match)
     end,
   })
 
   -- If auto-lsp.nvim is loaded after the startup (lazy loading),
-  -- retrigger the FileType event to check the existing buffers
+  -- check the filetypes of the buffers that are already open
   if vim.v.vim_did_enter == 1 then
-    doautoall("FileType", {
-      group = group,
-      modeline = false,
-    })
+    local buffers = vim.api.nvim_list_bufs()
+    for _, bufnr in ipairs(buffers) do
+      M.setup_filetype(vim.bo[bufnr].filetype)
+    end
   end
 end
 
