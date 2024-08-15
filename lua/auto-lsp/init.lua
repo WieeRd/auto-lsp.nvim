@@ -4,6 +4,7 @@ local reg = require("auto-lsp.registry")
 local M = {
   global_opts = {},
   server_opts = {},
+  auto_refresh = true,
   skip_executable_check = false,
 }
 
@@ -121,13 +122,26 @@ function M.setup(opts)
     ::continue::
   end
 
+  local group = augroup("auto-lsp", { clear = true })
+
   M.setup_generics()
   autocmd("FileType", {
-    group = augroup("auto-lsp", { clear = true }),
+    group = group,
     callback = function(args)
       M.setup_filetype(args.match)
     end,
   })
+
+  -- Attempt to detect servers that are newly installed while Neovim is running
+  -- that would normally be ignored due to `checked_{filetype, servers}` caching
+  if M.auto_refresh then
+    autocmd({ "FocusGained", "TermLeave" }, {
+      group = group,
+      callback = function(_)
+        M.refresh()
+      end,
+    })
+  end
 
   -- If auto-lsp.nvim is loaded after the startup (lazy loading),
   -- check the filetypes of the buffers that are already open
@@ -139,9 +153,6 @@ function M.setup(opts)
   end
 end
 
--- FEAT: auto refresh on new installation
--- | Option #1 - Watch each directory in $PATH (`:h uv_fs_event_t`)
--- | Option #2 - Autocmd on FocusGained, TermLeave, CmdlineLeave, etc
 function M.refresh()
   for name, setup in pairs(checked_servers) do
     if not setup then
