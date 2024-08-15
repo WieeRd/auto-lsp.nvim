@@ -1,13 +1,13 @@
-local M = {}
-
 local vim = vim
 local reg = require("auto-lsp.registry")
 
-M.checked_filetypes = {}
-M.checked_servers = {}
+local M = {
+  global_opts = {},
+  server_opts = {},
+}
 
-M.global_opts = {}
-M.server_opts = {}
+local checked_filetypes = {}
+local checked_servers = {}
 
 local augroup = vim.api.nvim_create_augroup
 local autocmd = vim.api.nvim_create_autocmd
@@ -21,11 +21,18 @@ local function doautoall(event, opts)
   end
 end
 
+function M.stats()
+  return {
+    checked_filetypes = checked_filetypes,
+    checked_servers = checked_servers,
+  }
+end
+
 function M.setup_server(name, recheck)
   -- nil: unchecked
   -- true: checked, already setup
   -- false: checked, was unavailable
-  local checked = M.checked_servers[name]
+  local checked = checked_servers[name]
   if checked == true or (checked == false and not recheck) then
     return
   end
@@ -49,7 +56,7 @@ function M.setup_server(name, recheck)
     require("lspconfig")[name].setup(opts)
   end
 
-  M.checked_servers[name] = setup
+  checked_servers[name] = setup
 end
 
 function M.setup_generics(recheck)
@@ -65,10 +72,10 @@ function M.setup_generics(recheck)
 end
 
 function M.setup_filetype(ft, recheck)
-  if M.checked_filetypes[ft] == true and not recheck then
+  if checked_filetypes[ft] == true and not recheck then
     return
   end
-  M.checked_filetypes[ft] = true
+  checked_filetypes[ft] = true
 
   local servers = reg.filetype_servers[ft]
   if not servers then
@@ -91,8 +98,9 @@ function M.setup_filetype(ft, recheck)
 end
 
 function M.setup(opts)
-  M.global_opts = opts.global_opts or {}
-  M.server_opts = opts.server_opts or {}
+  for key, value in pairs(opts) do
+    M[key] = value
+  end
 
   -- If the user specified the `filetypes` list through `server_opts`,
   -- update `filetype_servers` to trigger setup on the additional filetypes
@@ -134,7 +142,7 @@ end
 -- | Option #1 - Watch each directory in $PATH (`:h uv_fs_event_t`)
 -- | Option #2 - Autocmd on FocusGained, TermLeave, CmdlineLeave, etc
 function M.refresh()
-  for name, setup in pairs(M.checked_servers) do
+  for name, setup in pairs(checked_servers) do
     if not setup then
       M.setup_server(name, true)
     end
