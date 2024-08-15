@@ -4,6 +4,7 @@ local reg = require("auto-lsp.registry")
 local M = {
   global_opts = {},
   server_opts = {},
+  skip_executable_check = false,
 }
 
 local checked_filetypes = {}
@@ -48,7 +49,7 @@ function M.setup_server(name, recheck)
   elseif type(exec) == "boolean" then
     setup = exec
   elseif type(exec) == "string" then
-    setup = vim.fn.executable(exec) == 1
+    setup = M.skip_executable_check or vim.fn.executable(exec) == 1
   end
 
   if setup then
