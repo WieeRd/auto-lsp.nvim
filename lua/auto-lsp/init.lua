@@ -1,5 +1,5 @@
 local vim = vim
-local reg = require("auto-lsp.registry")
+local map = require("auto-lsp.mappings")
 
 local M = {
   global_opts = {},
@@ -40,7 +40,7 @@ function M.setup_server(name, recheck)
   end
 
   local opts = M.server_opts[name]
-  local exec = reg.server_executable[name]
+  local exec = map.server_executable[name]
 
   local setup
   if opts == false then
@@ -62,7 +62,7 @@ function M.setup_server(name, recheck)
 end
 
 function M.setup_generics(recheck)
-  local servers = reg.generic_servers
+  local servers = map.generic_servers
   for _, name in ipairs(servers) do
     M.setup_server(name, recheck)
   end
@@ -79,7 +79,7 @@ function M.setup_filetype(ft, recheck)
   end
   checked_filetypes[ft] = true
 
-  local servers = reg.filetype_servers[ft]
+  local servers = map.filetype_servers[ft]
   if not servers then
     return
   end
@@ -112,11 +112,11 @@ function M.setup(opts)
     end
 
     for _, ft in ipairs(opts.filetypes) do
-      local servers = reg.filetype_servers[ft] or {}
+      local servers = map.filetype_servers[ft] or {}
       if not vim.list_contains(servers, name) then
         servers[#servers + 1] = name
       end
-      reg.filetype_servers[ft] = servers
+      map.filetype_servers[ft] = servers
     end
 
     ::continue::
