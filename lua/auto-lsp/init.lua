@@ -30,12 +30,9 @@ function M.stats()
   }
 end
 
-function M.setup_server(name, recheck)
-  -- nil: unchecked
-  -- true: checked, already setup
-  -- false: checked, was unavailable
-  local checked = checked_servers[name]
-  if checked == true or (checked == false and not recheck) then
+function M.check_server(name, recheck)
+  local did_setup = checked_servers[name]
+  if did_setup == true or (did_setup == false and not recheck) then
     return
   end
 
@@ -61,10 +58,10 @@ function M.setup_server(name, recheck)
   checked_servers[name] = setup
 end
 
-function M.setup_generics(recheck)
+function M.check_generics(recheck)
   local servers = map.generic_servers
   for _, name in ipairs(servers) do
-    M.setup_server(name, recheck)
+    M.check_server(name, recheck)
   end
 
   doautoall("BufReadPost", {
@@ -73,7 +70,7 @@ function M.setup_generics(recheck)
   })
 end
 
-function M.setup_filetype(ft, recheck)
+function M.check_filetype(ft, recheck)
   if checked_filetypes[ft] == true and not recheck then
     return
   end
@@ -85,7 +82,7 @@ function M.setup_filetype(ft, recheck)
   end
 
   for _, name in ipairs(servers) do
-    M.setup_server(name)
+    M.check_server(name)
   end
 
   local buffers = vim.api.nvim_list_bufs()
@@ -97,6 +94,19 @@ function M.setup_filetype(ft, recheck)
       })
     end
   end
+end
+
+function M.refresh()
+  for name, setup in pairs(checked_servers) do
+    if not setup then
+      M.check_server(name, true)
+    end
+  end
+
+  doautoall({ "FileType", "BufReadPost" }, {
+    group = augroup("lspconfig", { clear = false }),
+    modeline = false,
+  })
 end
 
 function M.setup(opts)
@@ -124,11 +134,11 @@ function M.setup(opts)
 
   local group = augroup("auto-lsp", { clear = true })
 
-  M.setup_generics()
+  M.check_generics()
   autocmd("FileType", {
     group = group,
     callback = function(args)
-      M.setup_filetype(args.match)
+      M.check_filetype(args.match)
     end,
   })
 
@@ -148,22 +158,9 @@ function M.setup(opts)
   if vim.v.vim_did_enter == 1 then
     local buffers = vim.api.nvim_list_bufs()
     for _, bufnr in ipairs(buffers) do
-      M.setup_filetype(vim.bo[bufnr].filetype)
+      M.check_filetype(vim.bo[bufnr].filetype)
     end
   end
-end
-
-function M.refresh()
-  for name, setup in pairs(checked_servers) do
-    if not setup then
-      M.setup_server(name, true)
-    end
-  end
-
-  doautoall({ "FileType", "BufReadPost" }, {
-    group = augroup("lspconfig", { clear = false }),
-    modeline = false,
-  })
 end
 
 return M
