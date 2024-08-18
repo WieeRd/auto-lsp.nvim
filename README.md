@@ -24,16 +24,16 @@ WORK IN PROGRESS
 
 ```lua
 require("auto-lsp").setup({
-  global_opts = {},
-  server_opts = {},
+  global_config = {},
+  server_config = {},
   auto_refresh = true,
   skip_executable_check = false,
 })
 ```
 
-### `global_opts`
+### `global_config`
 
-### `server_opts`
+### `server_config`
 
 ### `auto_refresh`
 

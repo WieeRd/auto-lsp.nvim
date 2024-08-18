@@ -1,8 +1,8 @@
 local vim = vim
 
 local M = {
-  global_opts = {},
-  server_opts = {},
+  global_config = {},
+  server_config = {},
   auto_refresh = true,
   skip_executable_check = false,
 }
@@ -44,13 +44,13 @@ function M.check_server(name, recheck)
     return
   end
 
-  local opts = M.server_opts[name]
+  local config = M.server_config[name]
   local exec = map.server_executable[name]
 
   local setup
-  if opts == false then
+  if config == false then
     setup = false
-  elseif type(opts) == "table" then
+  elseif type(config) == "table" then
     setup = true
   elseif type(exec) == "boolean" then
     setup = exec
@@ -59,8 +59,8 @@ function M.check_server(name, recheck)
   end
 
   if setup then
-    opts = vim.tbl_deep_extend("force", M.global_opts, opts or {})
-    require("lspconfig")[name].setup(opts)
+    config = vim.tbl_deep_extend("force", M.global_config, config or {})
+    require("lspconfig")[name].setup(config)
   end
 
   checked_servers[name] = setup
@@ -122,14 +122,14 @@ function M.setup(opts)
     M[key] = value
   end
 
-  -- If the user specified the `filetypes` list through `server_opts`,
+  -- If the user specified the `filetypes` list through `server_config`,
   -- update `filetype_servers` to trigger setup on the additional filetypes
-  for name, opts in pairs(M.server_opts) do
-    if not (opts and opts.filetypes) then
+  for name, config in pairs(M.server_config) do
+    if not (config and config.filetypes) then
       goto continue
     end
 
-    for _, ft in ipairs(opts.filetypes) do
+    for _, ft in ipairs(config.filetypes) do
       local servers = map.filetype_servers[ft] or {}
       if not vim.list_contains(servers, name) then
         servers[#servers + 1] = name
