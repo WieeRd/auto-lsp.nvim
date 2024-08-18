@@ -1,5 +1,4 @@
 local vim = vim
-local map = require("auto-lsp.mappings")
 
 local M = {
   global_opts = {},
@@ -7,6 +6,15 @@ local M = {
   auto_refresh = true,
   skip_executable_check = false,
 }
+
+local path = vim.fn.stdpath("data") .. "/auto-lsp-mappings.lua"
+local ok, map = pcall(dofile, path)
+if not ok then
+  map = require("auto-lsp.generate")
+  local file = io.open(path, "w")
+  file:write("return ", vim.inspect(map))
+  file:close()
+end
 
 local checked_filetypes = {}
 local checked_servers = {}
