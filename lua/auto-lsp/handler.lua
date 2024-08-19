@@ -21,12 +21,7 @@ local function dofiletype(ft, opts)
   end
 end
 
-local M = {
-  global_opts = {},
-  server_opts = {},
-  auto_refresh = true,
-  skip_executable_check = false,
-}
+local M = {}
 
 function M:new(map, opts)
   -- add user specified server filetypes to the filetype:servers mapping

@@ -29,7 +29,12 @@ end
 
 function M.setup(opts)
   local map = M.mappings()
-  local opts = opts or {}
+  local opts = vim.tbl_extend("keep", opts or {}, {
+    global_config = {},
+    server_config = {},
+    auto_refresh = true,
+    skip_executable_check = false,
+  })
 
   local handler = require("auto-lsp.handler"):new(map, opts)
   local group = augroup("auto-lsp", { clear = true })
