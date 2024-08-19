@@ -1,0 +1,129 @@
+local vim = vim
+
+local augroup = vim.api.nvim_create_augroup
+local autocmd = vim.api.nvim_create_autocmd
+local doautocmd = vim.api.nvim_exec_autocmds
+
+local function doautoall(event, opts)
+  local buffers = vim.api.nvim_list_bufs()
+  for _, bufnr in ipairs(buffers) do
+    opts.buffer = bufnr
+    doautocmd(event, opts)
+  end
+end
+
+local function dofiletype(ft, opts)
+  local buffers = vim.api.nvim_list_bufs()
+  for _, bufnr in ipairs(buffers) do
+    if vim.bo[bufnr].filetype == ft then
+      doautocmd("FileType", opts)
+    end
+  end
+end
+
+local M = {
+  global_opts = {},
+  server_opts = {},
+  auto_refresh = true,
+  skip_executable_check = false,
+}
+
+function M:new(map, opts)
+  -- add user specified server filetypes to the filetype:servers mapping
+  for name, config in pairs(opts.server_config) do
+    if not (config and config.filetypes) then
+      goto continue
+    end
+
+    for _, ft in ipairs(config.filetypes) do
+      local ft_servers = map.filetype_servers[ft] or {}
+      if not vim.list_contains(ft_servers, name) then
+        ft_servers[#ft_servers + 1] = name
+      end
+      map.filetype_servers[ft] = ft_servers
+    end
+
+    ::continue::
+  end
+
+  local handler = vim.tbl_extend("error", map, opts, {
+    checked_filetypes = {},
+    checked_servers = {},
+  })
+  return setmetatable(handler, { __index = self })
+end
+
+function M:check_server(name, recheck)
+  local did_setup = self.checked_servers[name]
+  if did_setup == true or (did_setup == false and not recheck) then
+    return
+  end
+
+  local config = self.server_config[name]
+  local exec = self.server_executable[name]
+
+  local setup
+  if config == false then
+    setup = false
+  elseif type(config) == "table" then
+    setup = true
+  elseif type(exec) == "boolean" then
+    setup = exec
+  elseif type(exec) == "string" then
+    setup = self.skip_executable_check or vim.fn.executable(exec) == 1
+  end
+
+  if setup then
+    config = vim.tbl_deep_extend("force", self.global_config, config or {})
+    require("lspconfig")[name].setup(config)
+  end
+
+  self.checked_servers[name] = setup
+end
+
+function M:check_generics(recheck)
+  for _, name in ipairs(self.generic_servers) do
+    self:check_server(name, recheck)
+  end
+
+  doautoall("BufReadPost", {
+    group = augroup("lspconfig", { clear = false }),
+    modeline = false,
+  })
+end
+
+function M:check_filetype(ft, recheck)
+  if self.checked_filetypes[ft] == true and not recheck then
+    return
+  end
+  self.checked_filetypes[ft] = true
+
+  local ft_servers = self.filetype_servers[ft]
+  if not ft_servers then
+    return
+  end
+
+  for _, name in ipairs(ft_servers) do
+    self:check_server(name)
+  end
+
+  dofiletype(ft, {
+    group = augroup("lspconfig", { clear = false }),
+    modeline = false,
+  })
+end
+
+function M:refresh()
+  for name, did_setup in pairs(self.checked_servers) do
+    if not did_setup then
+      self:check_server(name, true)
+    end
+  end
+
+  doautoall({ "FileType", "BufReadPost" }, {
+    group = augroup("lspconfig", { clear = false }),
+    modeline = false,
+  })
+end
+
+return M
