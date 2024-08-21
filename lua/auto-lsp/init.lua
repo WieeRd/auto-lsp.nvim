@@ -5,13 +5,16 @@ local autocmd = vim.api.nvim_create_autocmd
 
 local M = {}
 
-function M.mappings(force)
-  local path = vim.fn.stdpath("data") .. "/auto-lsp-mappings.lua"
+M.MAPPINGS_PATH = vim.fn.stdpath("data") .. "/auto-lsp-mappings.lua"
 
-  if not force then
-    local ok, map = pcall(dofile, path)
-    if ok then
-      return map
+function M.mappings(opts)
+  local opts = opts or {}
+  local path = opts.path or M.MAPPINGS_PATH
+
+  if not opts.force then
+    local map, err = loadfile(path)
+    if map then
+      return map()
     end
   end
 
@@ -64,7 +67,9 @@ function M.setup(opts)
   vim.api.nvim_create_user_command("AutoLsp", function(opts)
     local subcmd = opts.args
     if subcmd == "build" then
-      M.mappings(true)
+      M.mappings({ force = true })
+    elseif subcmd == "mappings" then
+      vim.cmd.new(M.MAPPINGS_PATH)
     elseif subcmd == "refresh" then
       handler:refresh()
     elseif subcmd == "status" then
@@ -81,7 +86,7 @@ function M.setup(opts)
   end, {
     nargs = 1,
     complete = function(_, _, _)
-      return { "build", "refresh", "status" }
+      return { "build", "mappings", "refresh", "status" }
     end,
   })
 end
