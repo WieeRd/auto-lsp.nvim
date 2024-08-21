@@ -24,10 +24,6 @@ function M.mappings(force)
   return map
 end
 
-function M.build()
-  local _ = M.mappings(true)
-end
-
 function M.setup(opts)
   local map = M.mappings()
   local opts = vim.tbl_extend("keep", opts or {}, {
@@ -64,6 +60,30 @@ function M.setup(opts)
       handler:check_filetype(vim.bo[bufnr].filetype)
     end
   end
+
+  vim.api.nvim_create_user_command("AutoLsp", function(opts)
+    local subcmd = opts.args
+    if subcmd == "build" then
+      M.mappings(true)
+    elseif subcmd == "refresh" then
+      handler:refresh()
+    elseif subcmd == "status" then
+      vim.notify(vim.inspect({
+        checked_filetypes = handler.checked_filetypes,
+        checked_servers = handler.checked_servers,
+      }))
+    else
+      vim.notify(
+        ("Invalid subcommand '%s'"):format(subcmd),
+        vim.log.levels.ERROR
+      )
+    end
+  end, {
+    nargs = 1,
+    complete = function(_, _, _)
+      return { "build", "refresh", "status" }
+    end,
+  })
 end
 
 return M
