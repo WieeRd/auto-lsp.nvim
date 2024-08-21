@@ -57,23 +57,25 @@ function M:check_server(name, recheck)
   local config = self.server_config[name]
   local exec = self.server_executable[name]
 
-  local setup
-  if config == false then
-    setup = false
-  elseif type(config) == "table" then
-    setup = true
-  elseif type(exec) == "boolean" then
-    setup = exec
+  if type(config) == "table" then
+    config = config
+  elseif type(config) == "boolean" then
+    config = config and {}
+  elseif exec == false then
+    config = false
+  elseif exec == nil then
+    config = self.skip_executable_check and {}
   elseif type(exec) == "string" then
-    setup = self.skip_executable_check or vim.fn.executable(exec) == 1
+    config = self.skip_executable_check or vim.fn.executable(exec) == 1 and {}
   end
 
-  if setup then
-    config = vim.tbl_deep_extend("force", self.global_config, config or {})
+  if config then
+    config = vim.tbl_deep_extend("force", self.global_config, config)
     require("lspconfig")[name].setup(config)
+    self.checked_servers[name] = true
+  else
+    self.checked_servers[name] = false
   end
-
-  self.checked_servers[name] = setup
 end
 
 function M:check_generics(recheck)

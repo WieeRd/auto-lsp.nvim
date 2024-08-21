@@ -25,14 +25,12 @@ for _, file in ipairs(server_configs) do
     table.insert(M.generic_servers, name)
   end
 
-  if config.cmd then
-    if type(config.cmd) == "table" then
-      M.server_executable[name] = config.cmd[1]
-    else
-      M.server_executable[name] = true
-    end
-  else
+  if not config.cmd then
     M.server_executable[name] = false
+  elseif type(config.cmd) == "table" then
+    M.server_executable[name] = config.cmd[1]
+  elseif type(config.cmd) == "function" then
+    M.server_executable[name] = nil
   end
 end
 

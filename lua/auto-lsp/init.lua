@@ -15,6 +15,7 @@ function M.mappings(force)
     end
   end
 
+  package.loaded["auto-lsp.mappings"] = nil
   local map = require("auto-lsp.mappings")
   local file = io.open(path, "w")
   file:write("return ", vim.inspect(map))
@@ -48,7 +49,7 @@ function M.setup(opts)
     end,
   })
 
-  if handler.auto_refresh then
+  if opts.auto_refresh then
     autocmd({ "FocusGained", "TermLeave" }, {
       group = group,
       callback = function(_)
