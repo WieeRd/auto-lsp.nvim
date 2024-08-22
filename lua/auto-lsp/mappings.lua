@@ -40,6 +40,7 @@ local excluded_executables = setmetatable({
   R = true,
   dotnet = true,
   nc = true,
+  node = true,
   npx = true,
   python3 = true,
 }, { __index = M.filetype_servers })
@@ -47,8 +48,20 @@ local excluded_executables = setmetatable({
 -- Some languages come with official language server as a subcommand.
 -- They should not be filtered out by the above the heuristics.
 local allowed_servers = {
+  aiken = true,
+  bzl = true,
+  dafny = true,
   dartls = true,
+  erg_language_server = true,
+  futhark_lsp = true,
+  gleam = true,
+  koka = true,
+  mint = true,
   nushell = true,
+  superhtml = true,
+  templ = true,
+  uiua = true,
+  vls = true,
 }
 
 local uncheckable_servers = {}
