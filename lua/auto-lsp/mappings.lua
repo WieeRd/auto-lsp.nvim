@@ -7,6 +7,22 @@ local M = {
   server_executable = {},
 }
 
+-- Filter out language / package manager executables e.g. java -jar <server.jar>
+-- Languages with builtin language server as a subcommand should be excluded.
+local ignored_executables = {
+  R = true,
+  dotnet = true,
+  java = true,
+  julia = true,
+  nc = true,
+  node = true,
+  npx = true,
+  perl = true,
+  python = true,
+  python3 = true,
+  racket = true,
+}
+
 local server_configs = vim.api.nvim_get_runtime_file(
   "lua/lspconfig/server_configurations/*.lua",
   true
@@ -28,55 +44,13 @@ for _, file in ipairs(server_configs) do
   if not config.cmd then
     M.server_executable[name] = false
   elseif type(config.cmd) == "table" then
-    M.server_executable[name] = config.cmd[1]
+    local exec = config.cmd[1]
+    if not ignored_executables[exec] then
+      M.server_executable[name] = exec
+    end
   elseif type(config.cmd) == "function" then
     M.server_executable[name] = nil
   end
-end
-
--- Filter out language / package manager executables e.g. `python3 -m <module>`
--- Use the previously generated filetype mapping as a language names database.
-local excluded_executables = setmetatable({
-  R = true,
-  dotnet = true,
-  nc = true,
-  node = true,
-  npx = true,
-  python3 = true,
-}, { __index = M.filetype_servers })
-
--- Some languages come with official language server as a subcommand.
--- They should not be filtered out by the above the heuristics.
-local allowed_servers = {
-  aiken = true,
-  bzl = true,
-  dafny = true,
-  dartls = true,
-  erg_language_server = true,
-  futhark_lsp = true,
-  gleam = true,
-  koka = true,
-  mint = true,
-  nushell = true,
-  superhtml = true,
-  templ = true,
-  uiua = true,
-  vls = true,
-}
-
-local uncheckable_servers = {}
-for name, exec in pairs(M.server_executable) do
-  if excluded_executables[exec] and not allowed_servers[name] then
-    uncheckable_servers[name] = exec
-  end
-end
-
-for name, _ in pairs(uncheckable_servers) do
-  M.server_executable[name] = nil
-end
-
-if _G.AUTO_LSP_DEBUG then
-  vim.print(uncheckable_servers)
 end
 
 return M
