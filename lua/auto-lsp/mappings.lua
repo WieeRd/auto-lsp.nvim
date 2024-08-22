@@ -34,4 +34,36 @@ for _, file in ipairs(server_configs) do
   end
 end
 
+-- Filter out language / package manager executables e.g. `python3 -m <module>`
+-- Use the previously generated filetype mapping as a language names database.
+local excluded_executables = setmetatable({
+  R = true,
+  dotnet = true,
+  nc = true,
+  npx = true,
+  python3 = true,
+}, { __index = M.filetype_servers })
+
+-- Some languages come with official language server as a subcommand.
+-- They should not be filtered out by the above the heuristics.
+local allowed_servers = {
+  dartls = true,
+  nushell = true,
+}
+
+local uncheckable_servers = {}
+for name, exec in pairs(M.server_executable) do
+  if excluded_executables[exec] and not allowed_servers[name] then
+    uncheckable_servers[name] = exec
+  end
+end
+
+for name, _ in pairs(uncheckable_servers) do
+  M.server_executable[name] = nil
+end
+
+if _G.AUTO_LSP_DEBUG then
+  vim.print(uncheckable_servers)
+end
+
 return M
