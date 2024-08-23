@@ -61,12 +61,8 @@ function M:check_server(name, recheck)
     config = config
   elseif type(config) == "boolean" then
     config = config and {}
-  elseif exec == false then
-    config = false
-  elseif exec == nil then
-    config = self.skip_executable_check and {}
-  elseif type(exec) == "string" then
-    config = self.skip_executable_check or vim.fn.executable(exec) == 1 and {}
+  else
+    config = exec and vim.fn.executable(exec) == 1 and {}
   end
 
   if config then

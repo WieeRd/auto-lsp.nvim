@@ -32,8 +32,6 @@ function M.setup(opts)
   local opts = vim.tbl_extend("keep", opts or {}, {
     global_config = {},
     server_config = {},
-    auto_refresh = true,
-    skip_executable_check = false,
   })
 
   local handler = require("auto-lsp.handler"):new(map, opts)
@@ -48,14 +46,12 @@ function M.setup(opts)
     end,
   })
 
-  if opts.auto_refresh then
-    autocmd({ "FocusGained", "TermLeave" }, {
-      group = group,
-      callback = function(_)
-        handler:refresh()
-      end,
-    })
-  end
+  autocmd({ "FocusGained", "TermLeave" }, {
+    group = group,
+    callback = function(_)
+      handler:refresh()
+    end,
+  })
 
   if vim.v.vim_did_enter == 1 then
     local buffers = vim.api.nvim_list_bufs()

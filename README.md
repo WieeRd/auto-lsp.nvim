@@ -36,15 +36,9 @@ Below are currently available options with their default value.
 require("auto-lsp").setup({
   global_config = {},
   server_config = {},
-  auto_refresh = true,
-  skip_executable_check = false,
 })
 ```
 
 ### `global_config`
 
 ### `server_config`
-
-### `auto_refresh`
-
-### `skip_executable_check`

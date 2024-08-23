@@ -41,15 +41,11 @@ for _, file in ipairs(server_configs) do
     table.insert(M.generic_servers, name)
   end
 
-  if not config.cmd then
-    M.server_executable[name] = false
-  elseif type(config.cmd) == "table" then
+  if type(config.cmd) == "table" then
     local exec = config.cmd[1]
     if not ignored_executables[exec] then
       M.server_executable[name] = exec
     end
-  elseif type(config.cmd) == "function" then
-    M.server_executable[name] = nil
   end
 end
 
