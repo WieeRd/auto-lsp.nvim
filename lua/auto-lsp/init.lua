@@ -8,11 +8,11 @@ local M = {}
 M.MAPPINGS_PATH = vim.fn.stdpath("data") .. "/auto-lsp-mappings.lua"
 
 function M.mappings(opts)
-  local opts = opts or {}
+  opts = opts or {}
   local path = opts.path or M.MAPPINGS_PATH
 
   if not opts.force then
-    local map, err = loadfile(path)
+    local map, _ = loadfile(path)
     if map then
       return map()
     end
@@ -20,7 +20,8 @@ function M.mappings(opts)
 
   package.loaded["auto-lsp.mappings"] = nil
   local map = require("auto-lsp.mappings")
-  local file = io.open(path, "w")
+
+  local file = assert(io.open(path, "w"))
   file:write("return ", vim.inspect(map))
   file:close()
 
@@ -29,7 +30,7 @@ end
 
 function M.setup(opts)
   local map = M.mappings()
-  local opts = vim.tbl_extend("keep", opts or {}, {
+  opts = vim.tbl_extend("keep", opts or {}, {
     global_config = {},
     server_config = {},
   })
@@ -60,8 +61,8 @@ function M.setup(opts)
     end
   end
 
-  local function command(opts)
-    local subcmd = opts.args
+  local function command(args)
+    local subcmd = args.args
     if subcmd == "generate" then
       M.mappings({ force = true })
     elseif subcmd == "mappings" then

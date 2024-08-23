@@ -1,7 +1,6 @@
 local vim = vim
 
 local augroup = vim.api.nvim_create_augroup
-local autocmd = vim.api.nvim_create_autocmd
 local doautocmd = vim.api.nvim_exec_autocmds
 
 local function doautoall(event, opts)
