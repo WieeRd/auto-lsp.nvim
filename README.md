@@ -2,9 +2,13 @@
 
 Automatically detect and setup language servers that are available on your system.
 
-## About
+1. Have this plugin installed and setup.
+2. Have language servers installed.
+3. The servers will automatically attach to Neovim.
 
-WORK IN PROGRESS
+This works for nearly every server listed in [nvim-lspconfig].
+
+[nvim-lspconfig]: https://github.com/neovim/nvim-lspconfig
 
 ## Installation
 
@@ -19,9 +23,14 @@ WORK IN PROGRESS
 ```
 
 > [!NOTE]
-> The dependency and build instructions are already specified in [`lazy.lua`](lazy.lua).
+> The dependency and build instructions are specified in [`lazy.lua`](lazy.lua).\
+> They will be applied by `lazy.nvim` so that you don't have to.
+
+## Usage
 
 ## Configuration
+
+Below are currently available options with their default value.
 
 ```lua
 require("auto-lsp").setup({
