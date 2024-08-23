@@ -80,13 +80,17 @@ end
 
 function M:check_generics(recheck)
   for _, name in ipairs(self.generic_servers) do
-    self:check_server(name, recheck)
+    vim.schedule(function()
+      self:check_server(name, recheck)
+    end)
   end
 
-  doautoall("BufReadPost", {
-    group = augroup("lspconfig", { clear = false }),
-    modeline = false,
-  })
+  vim.schedule(function()
+    doautoall("BufReadPost", {
+      group = augroup("lspconfig", { clear = false }),
+      modeline = false,
+    })
+  end)
 end
 
 function M:check_filetype(ft, recheck)
@@ -101,26 +105,34 @@ function M:check_filetype(ft, recheck)
   end
 
   for _, name in ipairs(ft_servers) do
-    self:check_server(name)
+    vim.schedule(function()
+      self:check_server(name)
+    end)
   end
 
-  dofiletype(ft, {
-    group = augroup("lspconfig", { clear = false }),
-    modeline = false,
-  })
+  vim.schedule(function()
+    dofiletype(ft, {
+      group = augroup("lspconfig", { clear = false }),
+      modeline = false,
+    })
+  end)
 end
 
 function M:refresh()
   for name, did_setup in pairs(self.checked_servers) do
     if not did_setup then
-      self:check_server(name, true)
+      vim.schedule(function()
+        self:check_server(name, true)
+      end)
     end
   end
 
-  doautoall({ "FileType", "BufReadPost" }, {
-    group = augroup("lspconfig", { clear = false }),
-    modeline = false,
-  })
+  vim.schedule(function()
+    doautoall({ "FileType", "BufReadPost" }, {
+      group = augroup("lspconfig", { clear = false }),
+      modeline = false,
+    })
+  end)
 end
 
 return M
