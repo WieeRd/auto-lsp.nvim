@@ -16,19 +16,17 @@ return {
 
   -- How to check the availability of the server.
   -- * string: if vim.fn.executable(exec) == 1
-  -- * true: skip the check and always start
-  -- * false: requires user configuration to start
+  -- * nil: hard to check the availability or impossible to launch without user config
   server_executable = {
     ["contextive"] = "Contextive.LanguageServer",
 
     -- nvim-lspconfig does not provide `cmd` for elixirls.
     -- user configuration is required to figure out how to start the server.
-    ["elixirls"] = false,
+    ["elixirls"] = nil,
 
     -- gdscript is started via RPC function rather than a command string.
-    -- it's hard to check if it's available without actually starting it,
-    -- so always setup by default and leave it up to lspconfig.
-    ["gdscript"] = true,
+    -- it's hard to check if it's available without actually starting it.
+    ["gdscript"] = nil,
 
     -- automatically setup if rust-analyzer is installed, disabled if not.
     ["rust_analyzer"] = "rust-analyzer",
