@@ -64,29 +64,36 @@ function M.setup(opts)
     end
   end
 
-  vim.api.nvim_create_user_command("AutoLsp", function(opts)
+  local function command(opts)
     local subcmd = opts.args
-    if subcmd == "build" then
+    if subcmd == "generate" then
       M.mappings({ force = true })
     elseif subcmd == "mappings" then
       vim.cmd.new(M.MAPPINGS_PATH)
     elseif subcmd == "refresh" then
       handler:refresh()
     elseif subcmd == "status" then
-      vim.notify(vim.inspect({
+      vim.print({
         checked_filetypes = handler.checked_filetypes,
         checked_servers = handler.checked_servers,
-      }))
+      })
     else
       vim.notify(
         ("Invalid subcommand '%s'"):format(subcmd),
         vim.log.levels.ERROR
       )
     end
-  end, {
+  end
+
+  vim.api.nvim_create_user_command("AutoLsp", command, {
     nargs = 1,
-    complete = function(_, _, _)
-      return { "build", "mappings", "refresh", "status" }
+    complete = function(arglead, _, _)
+      return vim
+        .iter({ "generate", "mappings", "refresh", "status" })
+        :filter(function(subcmd)
+          return subcmd:find(arglead) ~= nil
+        end)
+        :totable()
     end,
   })
 end
