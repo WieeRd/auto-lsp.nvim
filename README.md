@@ -11,14 +11,15 @@ WORK IN PROGRESS
 ### [lazy.nvim](https://github.com/folke/lazy.nvim)
 
 ```lua
-{ "neovim/nvim-lspconfig" },
-
 {
   "WieeRd/auto-lsp.nvim",
   event = "VeryLazy",
   opts = {},
 },
 ```
+
+> [!NOTE]
+> The dependency and build instructions are already specified in [`lazy.lua`](lazy.lua).
 
 ## Configuration
 
