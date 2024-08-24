@@ -1,6 +1,6 @@
 # Auto-LSP.nvim
 
-Automatically detect and setup language servers that are available on your system.
+Automatically detect and setup language servers available on your system.
 
 1. Have this plugin installed and setup.
 2. Have language servers installed.
@@ -26,19 +26,6 @@ This works for nearly every server listed in [nvim-lspconfig].
 > The dependency and build instructions are specified in [`lazy.lua`](lazy.lua).\
 > They will be applied by `lazy.nvim` so that you don't have to.
 
-## Usage
-
 ## Configuration
 
-Below are currently available options with their default value.
-
-```lua
-require("auto-lsp").setup({
-  global_config = {},
-  server_config = {},
-})
-```
-
-### `global_config`
-
-### `server_config`
+If you read this, send a death threat to the author to get him working on the docs.
