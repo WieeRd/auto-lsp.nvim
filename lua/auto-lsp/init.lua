@@ -29,9 +29,16 @@ function M.mappings(opts)
 end
 
 function M.setup(opts)
+  -- FIX: MAYBE: evaluate config functions on demand
+  for name, config in pairs(opts) do
+    if type(config) == "function" then
+      opts[name] = config()
+    end
+  end
+
   opts = vim.tbl_extend("error", M.mappings(), {
+    global_config = opts["*"],
     server_config = opts,
-    global_config = opts["*"] or {},
   })
 
   local handler = require("auto-lsp.handler"):new(opts)
