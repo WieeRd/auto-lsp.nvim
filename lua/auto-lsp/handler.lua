@@ -25,12 +25,11 @@ local M = {}
 function M:new(opts)
   -- add user specified server filetypes to the filetype:servers mapping
   for name, config in pairs(opts.server_config) do
-    -- FIX: ASAP: `config` could be `true`
-    if not (config and config.filetypes) then
+    if not (type(config) == "table") then
       goto continue
     end
 
-    for _, ft in ipairs(config.filetypes) do
+    for _, ft in ipairs(config.filetypes or {}) do
       local ft_servers = opts.filetype_servers[ft] or {}
       if not vim.list_contains(ft_servers, name) then
         ft_servers[#ft_servers + 1] = name
