@@ -55,7 +55,9 @@ function M:check_server(name, recheck)
   local config = self.server_config[name]
   local exec = self.server_executable[name]
 
-  if type(config) == "table" then
+  if type(config) == "function" then
+    config = config()
+  elseif type(config) == "table" then
     config = config
   elseif type(config) == "boolean" then
     config = config and {}
@@ -64,12 +66,15 @@ function M:check_server(name, recheck)
   end
 
   if config then
+    if type(self.global_config) == "function" then
+      self.global_config = self.global_config()
+    end
+
     config = vim.tbl_deep_extend("force", self.global_config, config)
     require("lspconfig")[name].setup(config)
-    self.checked_servers[name] = true
-  else
-    self.checked_servers[name] = false
   end
+
+  self.checked_servers[name] = config and true or false
 end
 
 function M:check_generics(recheck)
