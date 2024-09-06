@@ -12,9 +12,11 @@ This works for nearly every server listed in [nvim-lspconfig].
 
 ## Installation
 
-### [lazy.nvim](https://github.com/folke/lazy.nvim)
+### [lazy.nvim]
 
 ```lua
+{ "neovim/nvim-lspconfig", lazy = true },
+
 {
   "WieeRd/auto-lsp.nvim",
   event = "VeryLazy",
@@ -22,9 +24,33 @@ This works for nearly every server listed in [nvim-lspconfig].
 },
 ```
 
+[lazy.nvim]: https://github.com/folke/lazy.nvim
+
+### [vim-plug]
+
+```vim
+Plug 'neovim/nvim-lspconfig', { 'do': ':let g:auto_lsp_update = 1' }
+Plug 'WieeRd/auto-lsp.nvim', { 'do': ':let g:auto_lsp_update = 1' }
+```
+
+```vim
+lua require("auto-lsp").setup()
+```
+
+[vim-plug]: https://github.com/junegunn/vim-plug
+
+## Building
+
+The server mappings need to be regenerated whenever [nvim-lspconfig] is updated.
+
+- You can automate this using the post-install hook of your plugin manager.
+- Simply set `g:auto_lsp_update` to `1` upon each update, before the plugin loads.
+
+See [#Installation/vim-plug](#vim-plug) for an example.
+
 > [!NOTE]
-> The dependency and build instructions are specified in [`lazy.lua`](lazy.lua).\
-> They will be applied by `lazy.nvim` so that you don't have to.
+> If you use [lazy.nvim], the `build` keys in [`lazy.lua`](lazy.lua) will be
+> applied automatically. No need to specify them manually.
 
 ## Configuration
 
