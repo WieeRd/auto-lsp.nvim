@@ -15,6 +15,7 @@ local function dofiletype(ft, opts)
   local buffers = vim.api.nvim_list_bufs()
   for _, bufnr in ipairs(buffers) do
     if vim.bo[bufnr].filetype == ft then
+      opts.buffer = bufnr
       doautocmd("FileType", opts)
     end
   end
