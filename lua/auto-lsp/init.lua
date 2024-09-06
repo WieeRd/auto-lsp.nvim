@@ -18,20 +18,27 @@ function M.mappings(opts)
     end
   end
 
+  vim.notify("[AutoLSP]: updating the server mappings...")
   package.loaded["auto-lsp.mappings"] = nil
-  local map = require("auto-lsp.mappings")
+  local mappings = require("auto-lsp.mappings")
 
   local file = assert(io.open(path, "w"))
-  file:write("return ", vim.inspect(map))
+  file:write("return ", vim.inspect(mappings))
   file:close()
 
-  return map
+  return mappings
 end
 
 function M.setup(opts)
-  opts = vim.tbl_extend("error", M.mappings(), {
-    global_config = opts["*"],
-    server_config = opts,
+  local mappings = M.mappings({ force = vim.g.auto_lsp_update })
+
+  local global_config = opts["*"]
+  local server_config = opts
+  server_config["*"] = nil
+
+  opts = vim.tbl_extend("error", mappings, {
+    global_config = global_config,
+    server_config = server_config,
   })
 
   local handler = require("auto-lsp.handler"):new(opts)
