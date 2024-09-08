@@ -1,28 +1,31 @@
 local vim = vim
+local uv = vim.uv
 
 local augroup = vim.api.nvim_create_augroup
 local autocmd = vim.api.nvim_create_autocmd
 
 local M = {}
 
-M.MAPPINGS_PATH = vim.fn.stdpath("data") .. "/auto-lsp-mappings.lua"
+function M.get_mappings(source, cache)
+  local mtime = uv.fs_stat(source).mtime.sec
+  local ok, mappings = pcall(dofile, cache)
 
-function M.mappings(opts)
-  opts = opts or {}
-  local path = opts.path or M.MAPPINGS_PATH
-
-  if not opts.force then
-    local map, _ = loadfile(path)
-    if map then
-      return map()
-    end
+  if
+    ok
+    and mappings.source.path == source
+    and mappings.source.mtime == mtime
+  then
+    return mappings
   end
 
-  vim.notify("[AutoLSP]: updating the server mappings...")
-  package.loaded["auto-lsp.mappings"] = nil
-  local mappings = require("auto-lsp.mappings")
+  vim.notify("[AutoLSP] updating server mappings...")
+  mappings = require("auto-lsp.generate")(source)
+  mappings.source = {
+    path = source,
+    mtime = mtime,
+  }
 
-  local file = assert(io.open(path, "w"))
+  local file = assert(io.open(cache, "w"))
   file:write("return ", vim.inspect(mappings))
   file:close()
 
@@ -30,7 +33,13 @@ function M.mappings(opts)
 end
 
 function M.setup(opts)
-  local mappings = M.mappings({ force = vim.g.auto_lsp_update })
+  -- FEAT: helpful error message if lspconfig is not available in runtimepath
+  local source = vim.api.nvim_get_runtime_file(
+    "lua/lspconfig/server_configurations/",
+    false
+  )[1]
+  local cache = vim.fn.stdpath("data") .. "/auto-lsp-mappings.lua"
+  local mappings = M.get_mappings(source, cache)
 
   local global_config = opts["*"]
   local server_config = opts
@@ -69,10 +78,11 @@ function M.setup(opts)
 
   local function command(args)
     local subcmd = args.args
+    -- FIX: update subcommands according to the refactored code
     if subcmd == "generate" then
-      M.mappings({ force = true })
+      -- M.mappings({ force = true })
     elseif subcmd == "mappings" then
-      vim.cmd.new(M.MAPPINGS_PATH)
+      -- vim.cmd.new(M.MAPPINGS_PATH)
     elseif subcmd == "refresh" then
       handler:refresh()
     elseif subcmd == "status" then
