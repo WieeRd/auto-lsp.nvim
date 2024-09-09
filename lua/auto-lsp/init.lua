@@ -1,12 +1,14 @@
+local M = {}
+
 local vim = vim
 local uv = vim.uv
 
 local augroup = vim.api.nvim_create_augroup
 local autocmd = vim.api.nvim_create_autocmd
 
-local M = {}
+M.MAPPINGS_PATH = vim.fn.stdpath("data") .. "/auto-lsp-mappings.lua"
 
-function M.get_mappings(source, cache)
+local function get_mappings(source, cache)
   local mtime = uv.fs_stat(source).mtime.sec
   local ok, mappings = pcall(dofile, cache)
 
@@ -29,17 +31,16 @@ function M.get_mappings(source, cache)
 end
 
 function M.setup(opts)
-  -- FEAT: helpful error message if lspconfig is not available in runtimepath
-  local source = vim.api.nvim_get_runtime_file(
-    "lua/lspconfig/server_configurations/",
-    false
-  )[1]
-  local cache = vim.fn.stdpath("data") .. "/auto-lsp-mappings.lua"
-  local mappings = M.get_mappings(source, cache)
-
   local global_config = opts["*"]
   local server_config = opts
   server_config["*"] = nil
+
+  local config_dir = "lua/lspconfig/server_configurations/"
+  config_dir = assert(
+    vim.api.nvim_get_runtime_file(config_dir, false)[1],
+    "Could not find `lua/lspconfig/` directory in the 'runtimepath'"
+  )
+  local mappings = get_mappings(config_dir, M.MAPPINGS_PATH)
 
   opts = vim.tbl_extend("error", mappings, {
     global_config = global_config,
@@ -72,39 +73,7 @@ function M.setup(opts)
     end
   end
 
-  local function command(args)
-    local subcmd = args.args
-    -- FIX: update subcommands according to the refactored code
-    if subcmd == "generate" then
-      -- M.mappings({ force = true })
-    elseif subcmd == "mappings" then
-      -- vim.cmd.new(M.MAPPINGS_PATH)
-    elseif subcmd == "refresh" then
-      handler:refresh()
-    elseif subcmd == "status" then
-      vim.print({
-        checked_filetypes = handler.checked_filetypes,
-        checked_servers = handler.checked_servers,
-      })
-    else
-      vim.notify(
-        ("Invalid subcommand '%s'"):format(subcmd),
-        vim.log.levels.ERROR
-      )
-    end
-  end
-
-  vim.api.nvim_create_user_command("AutoLsp", command, {
-    nargs = 1,
-    complete = function(arglead, _, _)
-      return vim
-        .iter({ "generate", "mappings", "refresh", "status" })
-        :filter(function(subcmd)
-          return subcmd:find(arglead) ~= nil
-        end)
-        :totable()
-    end,
-  })
+  M.handler = handler
 end
 
 return M
