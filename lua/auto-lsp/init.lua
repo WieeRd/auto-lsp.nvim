@@ -20,10 +20,6 @@ function M.get_mappings(source, cache)
 
   vim.notify("[AutoLSP] updating server mappings...")
   mappings = require("auto-lsp.generate")(source)
-  mappings.source = {
-    path = source,
-    mtime = mtime,
-  }
 
   local file = assert(io.open(cache, "w"))
   file:write("return ", vim.inspect(mappings))

@@ -1,4 +1,5 @@
 local vim = vim
+local uv = vim.uv
 
 -- filter out language / package manager commands e.g. python -m <module>
 local ignored_executables = {
@@ -47,6 +48,10 @@ local function generate(config_dir)
     generic_servers = generic_servers,
     filetype_servers = filetype_servers,
     server_executable = server_executable,
+    source = {
+      path = config_dir,
+      mtime = uv.fs_stat(config_dir).mtime.sec,
+    },
   }
 end
 
