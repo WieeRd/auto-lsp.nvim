@@ -13,13 +13,14 @@ M.LSPCONFIG_DIR = assert(
 )
 
 function M.build()
-  vim.notify("[auto-lsp.nvim] updating the server mappings...")
-  local mappings = require("auto-lsp.generate")(M.LSPCONFIG_DIR)
+  vim.notify("[auto-lsp.nvim] Updating the server mappings...")
 
+  local mappings = require("auto-lsp.generate")(M.LSPCONFIG_DIR)
   local file = assert(io.open(M.MAPPINGS_FILE, "w"))
   file:write("return ", vim.inspect(mappings))
   file:close()
 
+  vim.notify("[auto-lsp.nvim] Server mappings has been updated")
   return mappings
 end
 
@@ -69,6 +70,39 @@ function M.setup(opts)
       handler:check_filetype(vim.bo[bufnr].filetype)
     end
   end
+
+  local function command(args)
+    local subcmd = args.fargs[1]
+    if subcmd == "info" or subcmd == nil then
+      vim.print({
+        checked_filetypes = handler.checked_filetypes,
+        checked_servers = handler.checked_servers,
+      })
+    elseif subcmd == "mappings" then
+      vim.cmd.new(M.MAPPINGS_FILE)
+    elseif subcmd == "build" then
+      M.build()
+    elseif subcmd == "refresh" then
+      handler:refresh()
+    else
+      vim.notify(("[auto-lsp.nvim] Invalid subcmd '%s'"):format(subcmd))
+    end
+  end
+
+  local function complete(arglead, _, _)
+    return vim
+      .iter({ "info", "build", "mappings", "refresh" })
+      :filter(function(subcmd)
+        return subcmd:find(arglead) == 1
+      end)
+      :totable()
+  end
+
+  vim.api.nvim_create_user_command(
+    "AutoLsp",
+    command,
+    { nargs = "?", complete = complete }
+  )
 
   M.handler = handler
 end
