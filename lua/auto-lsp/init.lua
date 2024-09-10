@@ -12,22 +12,11 @@ M.LSPCONFIG_DIR = assert(
   "Could not find `lua/lspconfig/` directory in the 'runtimepath'"
 )
 
-local function get_mappings(source, cache)
-  local mtime = uv.fs_stat(source).mtime.sec
-  local ok, mappings = pcall(dofile, cache)
+function M.build()
+  vim.notify("[auto-lsp.nvim] updating the server mappings...")
+  local mappings = require("auto-lsp.generate")(M.LSPCONFIG_DIR)
 
-  if
-    ok
-    and mappings.source.path == source
-    and mappings.source.mtime == mtime
-  then
-    return mappings
-  end
-
-  vim.notify("[AutoLSP] updating server mappings...")
-  mappings = require("auto-lsp.generate")(source)
-
-  local file = assert(io.open(cache, "w"))
+  local file = assert(io.open(M.MAPPINGS_FILE, "w"))
   file:write("return ", vim.inspect(mappings))
   file:close()
 
@@ -35,7 +24,16 @@ local function get_mappings(source, cache)
 end
 
 function M.setup(opts)
-  local mappings = get_mappings(M.LSPCONFIG_DIR, M.MAPPINGS_FILE)
+  local mtime = uv.fs_stat(M.LSPCONFIG_DIR).mtime.sec
+  local ok, mappings = pcall(dofile, M.MAPPINGS_FILE)
+
+  local valid = ok
+    and mappings.source.path == M.LSPCONFIG_DIR
+    and mappings.source.mtime == mtime
+
+  if not valid then
+    mappings = M.build()
+  end
 
   local global_config = opts["*"]
   local server_config = opts
