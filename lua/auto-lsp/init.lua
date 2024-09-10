@@ -6,7 +6,11 @@ local uv = vim.uv
 local augroup = vim.api.nvim_create_augroup
 local autocmd = vim.api.nvim_create_autocmd
 
-M.MAPPINGS_PATH = vim.fn.stdpath("data") .. "/auto-lsp-mappings.lua"
+M.MAPPINGS_FILE = vim.fn.stdpath("data") .. "/auto-lsp-mappings.lua"
+M.LSPCONFIG_DIR = assert(
+  vim.api.nvim_get_runtime_file("lua/lspconfig/server_configurations/", false)[1],
+  "Could not find `lua/lspconfig/` directory in the 'runtimepath'"
+)
 
 local function get_mappings(source, cache)
   local mtime = uv.fs_stat(source).mtime.sec
@@ -31,16 +35,11 @@ local function get_mappings(source, cache)
 end
 
 function M.setup(opts)
+  local mappings = get_mappings(M.LSPCONFIG_DIR, M.MAPPINGS_FILE)
+
   local global_config = opts["*"]
   local server_config = opts
   server_config["*"] = nil
-
-  local config_dir = "lua/lspconfig/server_configurations/"
-  config_dir = assert(
-    vim.api.nvim_get_runtime_file(config_dir, false)[1],
-    "Could not find `lua/lspconfig/` directory in the 'runtimepath'"
-  )
-  local mappings = get_mappings(config_dir, M.MAPPINGS_PATH)
 
   opts = vim.tbl_extend("error", mappings, {
     global_config = global_config,
