@@ -2,13 +2,11 @@
 
 Automatically detect and setup language servers available on your system.
 
-1. Have this plugin installed and setup.
+1. Have `auto-lsp.nvim` installed and setup.
 2. Have language servers installed.
-3. The servers will automatically attach to Neovim.
+3. `lspconfig[server].setup()` is called automatically for each server.
 
-This works for nearly every server listed in [nvim-lspconfig].
-
-[nvim-lspconfig]: https://github.com/neovim/nvim-lspconfig
+As simple as that! Enjoy the fully automated integration with language servers.
 
 ## Installation
 
