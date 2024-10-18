@@ -89,6 +89,9 @@ require("auto-lsp").setup({
   -- Do not setup Rust Analyzer even if the executable is found in the $PATH.
   -- Useful if using `rustaceanvim` and don't want to setup RA via lspconfig.
   ["rust_analyzer"] = false,
+
+  -- Servers not specified in this table will be automatically setup
+  -- with default configurations if their executable is available.
 })
 ```
 
@@ -111,6 +114,6 @@ Clear the cache and regenerate the server mappings.
 ### `:AutoLsp refresh`
 
 Each server is checked only once per session for its availability.
-This command will recheck unavailable servers to detect newly installed ones.
+This command will recheck to detect new servers installed after Neovim was launched.
 `FocusGained` and `TermLeave` event will automatically trigger a refresh,
 so you don't normally need to run this manually.
