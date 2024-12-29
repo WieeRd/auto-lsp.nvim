@@ -36,7 +36,7 @@ function M.setup(opts)
     mappings = M.build()
   end
 
-  local global_config = opts["*"]
+  local global_config = opts["*"] or {}
   local server_config = opts
   server_config["*"] = nil
 
