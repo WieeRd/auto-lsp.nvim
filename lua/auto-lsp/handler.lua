@@ -72,7 +72,12 @@ function M:check_server(name, recheck)
     end
 
     config = vim.tbl_deep_extend("force", self.global_config, config)
-    require("lspconfig")[name].setup(config)
+    if vim.lsp.config then
+      vim.lsp.config(name, config)
+      vim.lsp.enable(name)
+    else
+      require("lspconfig")[name].setup(config)
+    end
   end
 
   self.checked_servers[name] = config and true or false
