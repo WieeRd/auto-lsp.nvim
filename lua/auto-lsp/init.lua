@@ -8,8 +8,9 @@ local autocmd = vim.api.nvim_create_autocmd
 
 M.MAPPINGS_FILE = vim.fn.stdpath("data") .. "/auto-lsp-mappings.lua"
 M.LSPCONFIG_DIR = assert(
+  vim.api.nvim_get_runtime_file("lsp/", false)[1] or
   vim.api.nvim_get_runtime_file("lua/lspconfig/configs/", false)[1],
-  "Could not find `lua/lspconfig/` directory in the 'runtimepath'"
+  "Could not find `lsp/` or `lua/lspconfig/configs/` directory in the 'runtimepath'"
 )
 
 function M.build()

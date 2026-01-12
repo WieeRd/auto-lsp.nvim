@@ -25,7 +25,11 @@ local function generate(config_dir)
   for _, file in ipairs(config_files) do
     local name = vim.fn.fnamemodify(file, ":r")
     local path = vim.fs.joinpath(config_dir, file)
-    local config = dofile(path).default_config
+    local config = dofile(path)
+    -- keeps backward compatibility with the legacy nvim-lspconfig scheme
+    if config.default_config then
+      config = config.default_config
+    end
 
     if config.filetypes then
       for _, ft in ipairs(config.filetypes) do
