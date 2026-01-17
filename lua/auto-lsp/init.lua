@@ -39,8 +39,8 @@ function M.setup(opts)
     mappings = M.build()
   end
 
-  local global_config = opts["*"] or {}
-  local server_config = opts
+  local server_config = opts or {}
+  local global_config = server_config["*"] or {}
   server_config["*"] = nil
 
   opts = vim.tbl_extend("error", mappings, {
