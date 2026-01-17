@@ -1,7 +1,8 @@
+assert(vim.fn.has('nvim-0.7') == 1, 'requires Neovim 0.7 or newer')
+
 local M = {}
 
-local vim = vim
-local uv = vim.uv
+local uv = vim.uv or vim.loop
 
 local augroup = vim.api.nvim_create_augroup
 local autocmd = vim.api.nvim_create_autocmd
@@ -9,8 +10,9 @@ local autocmd = vim.api.nvim_create_autocmd
 M.MAPPINGS_FILE = vim.fn.stdpath("data") .. "/auto-lsp-mappings.lua"
 M.LSPCONFIG_DIR = assert(
   vim.api.nvim_get_runtime_file("lsp/", false)[1] or
-  vim.api.nvim_get_runtime_file("lua/lspconfig/configs/", false)[1],
-  "Could not find `lsp/` or `lua/lspconfig/configs/` directory in the 'runtimepath'"
+  vim.api.nvim_get_runtime_file("lua/lspconfig/configs/", false)[1] or
+  vim.api.nvim_get_runtime_file("lua/lspconfig/server_configurations/", false)[1],
+  "Could not find `lsp/`, `lua/lspconfig/configs/`, or `lua/lspconfig/server_configurations/` directory in the 'runtimepath'"
 )
 
 function M.build()
@@ -75,12 +77,12 @@ function M.setup(opts)
   local function command(args)
     local subcmd = args.fargs[1]
     if subcmd == "info" or subcmd == nil then
-      vim.print({
+      print(vim.inspect({
         checked_filetypes = handler.checked_filetypes,
         checked_servers = handler.checked_servers,
-      })
+      }))
     elseif subcmd == "mappings" then
-      vim.cmd.new(M.MAPPINGS_FILE)
+      vim.cmd("new " .. M.MAPPINGS_FILE)
     elseif subcmd == "build" then
       M.build()
     elseif subcmd == "refresh" then
@@ -91,8 +93,12 @@ function M.setup(opts)
   end
 
   local function complete(arglead, _, _)
+    local subcmds = { "info", "build", "mappings", "refresh" }
+    if not vim.iter then
+      return subcmds
+    end
     return vim
-      .iter({ "info", "build", "mappings", "refresh" })
+      .iter(subcmds)
       :filter(function(subcmd)
         return subcmd:find(arglead) == 1
       end)

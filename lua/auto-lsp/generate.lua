@@ -1,5 +1,4 @@
-local vim = vim
-local uv = vim.uv
+local uv = vim.uv or vim.loop
 
 -- filter out language / package manager commands e.g. python -m <module>
 local ignored_executables = {
@@ -24,7 +23,7 @@ local function generate(config_dir)
   local config_files = vim.fn.readdir(config_dir)
   for _, file in ipairs(config_files) do
     local name = vim.fn.fnamemodify(file, ":r")
-    local path = vim.fs.joinpath(config_dir, file)
+    local path = config_dir .. file
     local config = dofile(path)
     -- keeps backward compatibility with the legacy nvim-lspconfig scheme
     if config.default_config then

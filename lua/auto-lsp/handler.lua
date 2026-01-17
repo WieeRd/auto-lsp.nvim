@@ -1,5 +1,3 @@
-local vim = vim
-
 local augroup = vim.api.nvim_create_augroup
 local doautocmd = vim.api.nvim_exec_autocmds
 
